@@ -1,12 +1,15 @@
-# Environment variables - 절대로 공개되면 안 되는 민감 정보
+# Environment variables - Secret keys that must not be exposed
 .env
 
-# Python virtual environment - 각자 컴퓨터 환경이 다르므로 공유하지 않음
+# Python virtual environment - Machine-specific and can be recreated
 venv/
 /venv/
 
-# Python cache files - 실행 시 자동으로 생성되는 파일
+# Python cache files - Generated automatically at runtime
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+# macOS specific files - System-generated metadata
+.DS_Store

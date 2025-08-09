@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 
-def publish_to_github(title: str, markdown_body: str, image_local_path: str) -> str:
+def publish_to_github(title: str, markdown_body: str, image_local_path: str, category: str) -> str:
     """
     최종 글과 이미지를 GitHub 리포지토리의 적절한 위치에 업로드하여 Netlify 배포를 트리거합니다.
     모든 콘텐츠 생성이 완료된 후 마지막에 사용되어야 합니다.
@@ -50,23 +50,25 @@ def publish_to_github(title: str, markdown_body: str, image_local_path: str) -> 
 
         # 2. 마크다운 파일 생성 및 업로드
         # Frontmatter 생성
-        today_date = datetime.now().strftime("%Y-%m-%d")
+        now = datetime.now()
+        date_for_frontmatter = now.strftime("%Y-%m-%d")
         frontmatter = f"""---
 title: "{title}"
-date: {today_date}
+date: {date_for_frontmatter}
 image: "{image_url_in_repo}"
----
-"""
+category: "{category}"
+---"""
         full_markdown_content = frontmatter + "\n" + markdown_body
 
-        # 마크다운 파일명 생성
-        post_filename = re.sub(r'[^a-z0-9\s-]', '', title.lower()).strip()
-        post_filename = re.sub(r'\s+', '-', post_filename)
-        if not post_filename:
-            post_filename = "new-blog-post"
-        post_filename = f"{today_date}-{post_filename}.md"
+        # 마크다운 파일명 생성 (고유성 보장)
+        time_for_filename = now.strftime("%Y-%m-%d-%H%M%S")
+        post_filename_base = re.sub(r'[^a-z0-9\s-]', '', title.lower()).strip()
+        post_filename_base = re.sub(r'\s+', '-', post_filename_base)
+        if not post_filename_base:
+            post_filename_base = "new-blog-post"
+        post_filename = f"{time_for_filename}-{post_filename_base}.md"
         
-        post_repo_path = f"content/posts/{post_filename}"
+        post_repo_path = f"_posts/{post_filename}"
 
         # 동일한 파일이 있는지 확인
         try:
