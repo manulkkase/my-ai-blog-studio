@@ -54,7 +54,7 @@ def publish_to_github(title: str, full_article_content: str, category: str, imag
                 else:
                     raise e
             
-            featured_image_path = image_repo_path # Remove the leading slash
+            featured_image_path = f"/{image_repo_path}" # Add leading slash for absolute path
 
         except Exception as e:
             print(f"Warning: Image processing failed: {e}. Proceeding without an image.")
