@@ -1,6 +1,7 @@
 import os
 import re
 import requests
+from datetime import datetime
 from openai import OpenAI, APIError
 from dotenv import load_dotenv
 
@@ -21,8 +22,19 @@ def create_image(article_content: str, topic: str) -> str:
 
         # 이미지 생성 프롬프트를 위한 요약 생성 (LLM 호출)
         summary_prompt = f"""
-        다음은 '{topic}'에 대한 블로그 게시물입니다. 이 글의 핵심 내용을 바탕으로, 독자의 시선을 사로잡을 만한 대표 이미지(블로그 썸네일)를 생성하기 위한 DALL-E 프롬프트(영문)를 한 문장으로 작성해주세요. 사진 스타일(photorealistic)을 강조해주세요.
+        너는 내셔널 지오그래픽 소속의 베테랑 여행 사진작가다. 주어진 블로그 글의 핵심을 꿰뚫는 단 한 장의 대표 사진을 만들어야 한다.
 
+        **[미션]**
+        다음 블로그 글을 분석하여, 마치 독자가 그 순간을 직접 엿보는 듯한 느낌을 주는 '결정적 순간(The Decisive Moment)'을 포착해줘.
+
+        **[촬영 가이드라인]**
+        1.  **스타일:** 꾸며낸 스튜디오 사진이 아닌, 현장의 날것(RAW) 느낌을 살린 포토 저널리즘 스타일.
+        2.  **카메라/렌즈:** 라이카(Leica) M11 카메라와 35mm 단렌즈로 촬영한 듯한 질감.
+        3.  **조명:** 인공조명은 절대 사용 금지. 오직 현장의 자연광(natural light)만을 활용하며, 특히 해 질 녘의 부드러운 빛(golden hour)을 선호.
+        4.  **구성:** 피사체는 완벽하게 중앙에 놓기보다, '3분할 법칙(Rule of Thirds)'에 따라 자연스럽게 배치하여 깊이와 균형감을 더할 것.
+        5.  **결과물:** 최종 프롬프트는 반드시 영어로, 쉼표로 구분된 핵심 묘사들의 나열 형태여야 한다.
+
+        **[분석할 블로그 내용]**
         ---
         {article_content[:1000]}
         ---
@@ -49,18 +61,18 @@ def create_image(article_content: str, topic: str) -> str:
         
         image_url = image_response.data[0].url
 
-        # 주제를 기반으로 파일명 생성 (영문, 소문자, 하이픈)
-        # 한글을 영어로 변환하는 간단한 로직 또는 LLM 호출이 필요하지만, 여기서는 우선 한글을 제거하고 일부를 사용합니다.
-        file_name = re.sub(r'[^a-z0-9\s-]', '', topic.lower()).strip()
-        file_name = re.sub(r'\s+', '-', file_name)
-        if not file_name:
-            file_name = "blog-post-image"
-        file_name += ".jpg"
+        # 주제를 기반으로 고유한 파일명 생성 (영문, 소문자, 하이픈)
+        file_name_base = re.sub(r'[^a-z0-9\s-]', '', topic.lower()).strip()
+        file_name_base = re.sub(r'\s+', '-', file_name_base)
+        if not file_name_base:
+            file_name_base = "blog-post"
+        
+        # 타임스탬프를 추가하여 파일 이름의 고유성 보장
+        timestamp = datetime.now().strftime("%H%M%S")
+        file_name = f"{file_name_base}-{timestamp}.jpg"
 
-        # 이미지 저장 경로 설정
-        save_dir = 'static/images'
-        os.makedirs(save_dir, exist_ok=True)
-        image_path = os.path.join(save_dir, file_name)
+        # 임시 로컬 경로에 이미지 저장
+        image_path = file_name
 
         # 이미지 다운로드 및 저장
         img_data = requests.get(image_url).content

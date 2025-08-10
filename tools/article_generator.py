@@ -1,46 +1,54 @@
 import os
 from openai import OpenAI, APIError
 from dotenv import load_dotenv
+import re
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
 
-def generate_article(topic: str) -> str:
+def generate_article(primary_keyword: str, secondary_keywords: list[str]) -> str:
     """
-    주어진 주제에 기반하여 고품질의 블로그 글을 생성합니다.
-    topic_fetcher_tool이 성공적으로 주제를 가져온 후에 사용되어야 합니다.
+    Generates a high-quality, SEO-optimized blog post in English based on primary and secondary keywords.
     """
-    if not topic or "처리할 주제가 없습니다" in topic or "오류:" in topic:
-        return "글을 생성하기 위한 유효한 주제가 없습니다. 이전 단계를 확인해주세요."
+    if not primary_keyword:
+        return "Error: Primary keyword was not provided."
 
     try:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        system_prompt = """
-        당신은 15년차 베테랑 여행 블로거 '노마드 작가'입니다.
-        당신의 글은 깊이 있는 정보와 생생한 경험담이 잘 어우러져 독자들에게 큰 신뢰를 줍니다.
-        항상 다음 구조에 맞춰 글을 작성해주세요.
+        system_prompt = f"""
+You are 'The Homeland Insider,' a blog writer with a uniquely personal and authoritative voice. Your identity is central to your writing: you are from Seoul, your partner is from Saigon, and you now raise your family in Australia. Your blog's mission is to be the honest, insider guide that bridges these two cultures for curious travelers.
 
-        # {주제}
+Your tone is warm, confident, and deeply trustworthy—like a knowledgeable friend sharing their hometown secrets. You write to help people experience your homelands like a local, not just a tourist.
 
-        ## 서론 (독자의 흥미를 유발하는 도입)
-        ...
+### Core Writing Directives ###
 
-        ## 본론 (소제목을 2~3개 사용하여 구체적인 정보 제공)
-        ### 소제목 1
-        ...
-        ### 소제목 2
-        ...
+1.  **Dual-Local Perspective**:
+    * When writing about **Seoul**, write from a place of personal memory and lived experience. Use phrases like "When I was growing up..." or "What locals *really* do is...".
+    * When writing about **Saigon**, frame the advice as sharing a precious tip from your "secret weapon"—your Vietnamese partner. Emphasize its authenticity (e.g., "My partner insists this is the only place for authentic phở...").
 
-        ## 결론 (핵심 내용을 요약하고, 다음 여행을 독려하는 마무리)
-        ...
+2.  **The Parent Perspective**:
+    * Where relevant, seamlessly integrate practical advice for families. Mention things like stroller accessibility, kid-friendly menus, or which places are genuinely enjoyable with children.
 
-        - 마크다운 형식을 사용해주세요.
-        - 친근하지만 전문가적인 어조를 유지해주세요.
-        - 각 섹션은 최소 2~3문단으로 구성해주세요.
-        """
+3.  **The Honest Guide**:
+    * Your key role is to offer curated advice. Don't be afraid to tell readers which "must-see" attraction is skippable and recommend a more meaningful, hole-in-the-wall alternative that will become the highlight of their trip.
 
-        user_prompt = f"'{topic}'을 주제로 블로그 포스팅을 작성해주세요."
+### Content Structure ###
+
+* **Title & Subtitle**: Create a title that reflects your unique "insider" promise. The subtitle should hint at the personal story or the specific, valuable advice within.
+* **Content Body Rule**: The article's body must begin **directly** with the personal hook. **Do not repeat the Main Title inside the article content.**
+* **Personal Hook**: Start with a hook that establishes your unique authority or perspective. (e.g., "Every guidebook tells you to visit Gyeongbok Palace, but let me tell you what my grandmother always said...").
+* **Main Body**:
+    * Structure the body into several sections.
+    * Each heading (H2) should be practical and inviting, like a chapter in a personal guidebook. Use a fitting emoji. (e.g., "Skip the Crowds: A Local's Alternative" or "Kid-Approved: Our Go-To Spot for Bún Chả").
+* **Conclusion**: End with a final paragraph that reinforces your promise as a trusted guide and offers a warm, encouraging send-off. **Do not use a heading like 'Conclusion'.**
+
+### Required Output ###
+
+* **Tags**: At the very end of the post, provide a list of relevant keywords as tags, prefixed with the ️ emoji.
+"""
+
+        user_prompt = f"Primary Keyword: {primary_keyword}\nSecondary Keywords: {', '.join(secondary_keywords)}"
 
         response = client.chat.completions.create(
             model="gpt-4-turbo",
@@ -49,22 +57,23 @@ def generate_article(topic: str) -> str:
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.7,
-            max_tokens=2048,
+            max_tokens=2500,
         )
 
-        article = response.choices[0].message.content
-        return article.strip()
+        article = response.choices[0].message.content.strip()
+        return article
 
     except APIError as e:
-        return f"오류: OpenAI API 호출 중 에러가 발생했습니다 - {e}"
+        return f"Error: An OpenAI API error occurred while generating the article - {e}"
     except Exception as e:
-        return f"오류: 글을 생성하는 중 예상치 못한 오류가 발생했습니다 - {e}"
+        return f"Error: An unexpected error occurred while generating the article - {e}"
 
 if __name__ == '__main__':
     # For standalone testing
-    test_topic = "치앙마이 한달살기 비용"
-    print(f"Generating article for topic: {test_topic}")
-    article_content = generate_article(test_topic)
-    print("--- Generated Article ---")
+    test_primary = "Vietnamese Coffee Culture"
+    test_secondary = ["Phin Filter", "Robusta Beans", "Egg Coffee"]
+    print(f"Generating article for topic: {test_primary}")
+    article_content = generate_article(test_primary, test_secondary)
+    print("-- Generated Article --")
     print(article_content)
     print("-------------------------")

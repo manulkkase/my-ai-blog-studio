@@ -1,6 +1,7 @@
 import os
 import sys
 from dotenv import load_dotenv
+import re
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -11,61 +12,68 @@ from langchain_community.tools import tool
 load_dotenv()
 
 # --- Tool Imports ---
-# Add the tools directory to the system path to ensure imports work
 sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
 
 from topic_fetcher import fetch_topic
 from article_generator import generate_article
-from category_assigner import assign_category # 새로운 도구 임포트
+from category_assigner import assign_category
 from image_creator import create_image
 from github_publisher import publish_to_github
 
+# --- Keyword Parsing ---
+def parse_keywords(topic_line: str) -> (str, list[str]):
+    """Helper function to parse keywords from a string."""
+    primary_match = re.search(r"Primary:\s*(.*?)(;|$)", topic_line)
+    secondary_match = re.search(r"Secondary:\s*(.*)", topic_line)
+    primary_keyword = primary_match.group(1).strip() if primary_match else ""
+    if secondary_match and secondary_match.group(1):
+        secondary_keywords = [kw.strip() for kw in secondary_match.group(1).split(',')]
+    else:
+        secondary_keywords = []
+    return primary_keyword, secondary_keywords
+
 # --- Tool Definitions ---
-# Use the @tool decorator to convert functions into LangChain tools.
-# The docstring of each function is crucial as it's the description the agent uses.
 
 @tool
-def topic_fetcher_tool() -> str:
+def full_blog_creation_pipeline_tool(topic_line: str) -> str:
     """
-    Fetches the next blog topic from the 'topics.txt' file. This must be the first step.
+    Handles the entire blog post creation process from a single topic line.
+    This tool fetches the topic, generates the article, assigns a category,
+    creates an image, and publishes the final post.
+    This is the only tool that should be called directly by the agent.
     """
-    return fetch_topic()
+    # 1. Parse Keywords
+    primary_keyword, secondary_keywords = parse_keywords(topic_line)
+    if not primary_keyword:
+        return "Error: Could not parse the primary keyword from the topic line."
 
-@tool
-def article_generator_tool(topic: str) -> str:
-    """
-    Generates a high-quality blog post in Markdown format based on a given topic.
-    Use this after successfully fetching a topic.
-    """
-    return generate_article(topic)
+    # 2. Generate Article
+    print(f"Generating article for: {primary_keyword}")
+    full_article_content = generate_article(primary_keyword, secondary_keywords)
+    if "Error:" in full_article_content:
+        return full_article_content
 
-@tool
-def category_assigner_tool(topic: str) -> str:
-    """
-    Assigns the most appropriate category to the blog post based on its topic.
-    Use this after generating the article content.
-    The available categories are: K-Culture & Palaces, Street Food & Night Markets, Mountains & Rice Terraces, Beaches, Bays & Islands, City Vibes & Night-life, Budget Hacks & Transport.
-    """
-    return assign_category(topic)
+    # 3. Assign Category
+    print(f"Assigning category for: {primary_keyword}")
+    category = assign_category(primary_keyword)
+    if "Error:" in category:
+        return category
 
-@tool
-def image_creator_tool(article_content: str, topic: str) -> str:
-    """
-    Creates a relevant image for the blog post using DALL-E 3 and saves it locally.
-    Use this after assigning the category.
-    Returns the local file path of the created image.
-    """
-    return create_image(article_content, topic)
+    # 4. Create Image
+    print(f"Creating image for: {primary_keyword}")
+    # Extract body for better image prompt generation
+    body_content = "\n".join(full_article_content.split('\n')[2:])
+    image_local_path = create_image(body_content, primary_keyword)
+    if "Error:" in image_local_path:
+        return image_local_path
 
-@tool
-def github_publisher_tool(title: str, markdown_body: str, image_local_path: str, category: str) -> str:
-    """
-    Publishes the final article, its image, and its category to the designated GitHub repository.
-    This is the final step. It takes the post title, markdown body, local image path, and the assigned category as input.
-    Returns the URL of the published blog post.
-    """
-    return publish_to_github(title, markdown_body, image_local_path, category)
-
+    # 5. Publish to GitHub
+    print(f"Publishing post for: {primary_keyword}")
+    # Extract title from the first line of the article
+    title = full_article_content.split('\n')[0].strip()
+    result = publish_to_github(title, full_article_content, category, image_local_path)
+    
+    return result
 
 # --- Agent Setup ---
 
@@ -73,70 +81,43 @@ def main():
     """
     Main function to initialize and run the Blog Studio Agent.
     """
-    # Check for necessary environment variables
     if not os.getenv("OPENAI_API_KEY") or not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO_NAME"):
-        print("오류: 필수 환경 변수(OPENAI_API_KEY, GITHUB_TOKEN, GITHUB_REPO_NAME)가 설정되지 않았습니다.")
+        print("Error: Required environment variables are not set.")
         sys.exit(1)
 
-    # Define the list of tools the agent can use
-    tools = [
-        topic_fetcher_tool,
-        article_generator_tool,
-        category_assigner_tool, # 도구 목록에 추가
-        image_creator_tool,
-        github_publisher_tool
-    ]
+    # The agent now only needs one tool that encapsulates the entire workflow.
+    tools = [full_blog_creation_pipeline_tool]
 
-    # Define the system prompt for the agent
     agent_system_prompt = """
-    You are 'Blog Studio Agent', an autonomous AI responsible for operating 'The Unfiltered Trail' blog.
-    Your goal is to handle the entire content production pipeline from a given topic to final publication on GitHub.
-    You must use the provided tools sequentially and logically to achieve this goal.
-    
-    Here is your new workflow:
-    1.  First, get a topic using `topic_fetcher_tool`.
-    2.  If you get a valid topic, use it to generate an article with `article_generator_tool`.
-    3.  Then, use the topic to determine the correct category with `category_assigner_tool`.
-    4.  After that, use the generated article's content and the original topic to create an image with `image_creator_tool`.
-    5.  Finally, use all the generated assets (title, body, image path, and category) to publish everything with `github_publisher_tool`.
-    
-    Always think step-by-step. If a step fails, report the error. If all steps are successful, report the final URL.
-    Do not ask for confirmation at any step, proceed with the workflow autonomously.
+    You are 'Blog Studio Agent', a supervisor AI. Your only job is to take a topic line and pass it to the `full_blog_creation_pipeline_tool` to handle the entire process.
+    First, fetch the topic line from the user input. Then, call the tool with the fetched topic line.
     """
 
-    # Create the prompt template for the agent
     prompt = ChatPromptTemplate.from_messages([
         ("system", agent_system_prompt),
-        ("user", "{input}"),
+        ("user", "Please process the following topic line: {input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
-    # Initialize the LLM
     llm = ChatOpenAI(model="gpt-4-turbo", temperature=0)
-
-    # Create the agent
     agent = create_openai_tools_agent(llm, tools, prompt)
-
-    # Create the agent executor, which runs the agent
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-    # Get user input from command line arguments
-    if len(sys.argv) > 1:
-        user_prompt = " ".join(sys.argv[1:])
-    else:
-        user_prompt = "자기소개 및 역할 확인"
-        print(f"명령어가 제공되지 않았습니다. 기본 프롬프트로 실행합니다: '{user_prompt}'")
+    # Fetch the topic directly here instead of inside the agent loop
+    topic_line = fetch_topic()
+    if not topic_line or "처리할 주제가 없습니다" in topic_line:
+        print("No topics to process. Exiting.")
+        return
 
-    print(f"--- Blog Studio Agent를 다음 명령으로 실행합니다 ---")
-    print(f"Input: {user_prompt}")
+    print(f"--- Blog Studio Agent starting with topic ---")
+    print(f"Topic: {topic_line}")
     print("----------------------------------------------------")
 
-    # Invoke the agent
-    response = agent_executor.invoke({"input": user_prompt})
+    response = agent_executor.invoke({"input": topic_line})
 
-    print("--- Agent 실행 완료 ---")
+    print("--- Agent execution finished ---")
     print(f"Final Output: {response['output']}")
-    print("-------------------------")
+    print("--------------------------------")
 
 
 if __name__ == "__main__":
