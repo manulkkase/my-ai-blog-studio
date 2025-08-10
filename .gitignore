@@ -1,15 +1,12 @@
-# Environment variables - Secret keys that must not be exposed
+# Environment variables
 .env
 
-# Python virtual environment - Machine-specific and can be recreated
+# Python virtual environment
 venv/
-/venv/
 
-# Python cache files - Generated automatically at runtime
+# macOS system files
+.DS_Store
+
+# Python cache
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# macOS specific files - System-generated metadata
-.DS_Store
