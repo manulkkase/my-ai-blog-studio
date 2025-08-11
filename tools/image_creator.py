@@ -22,26 +22,42 @@ def create_image(article_content: str, topic: str) -> str:
 
         # 이미지 생성 프롬프트를 위한 요약 생성 (LLM 호출)
         summary_prompt = f"""
-        You are a world-class travel photographer creating a single, stunning cover image for a blog post.
-        You must adhere strictly to the following guidelines to generate a DALL-E prompt (in English) based on the provided blog content.
+You are a world-class travel photographer and creative director. Your mission is to create a single, stunning cover image for a blog post by generating the perfect DALL-E prompt.
 
-        **[Master Photography Guidelines]**
+You must strictly follow all guidelines below.
 
-        1.  **Camera & Lens:** The image must look like it was shot on a **Sony Alpha 1** with a **35mm f/1.4 prime lens**.
-        2.  **Style:** The artistic style must be a blend of **Hyperrealistic Detail** and **Documentary Photography**. It should feel authentic, raw, and incredibly detailed, not like a staged or overly-edited AI image.
-        3.  **Lighting:** Use only **natural light**. Prioritize the soft, warm light of the **golden hour** (early morning or late afternoon).
-        4.  **Composition:** Apply the **Rule of Thirds**. The main subject should be placed off-center to create balance and depth.
-        5.  **Final Prompt Format:** The output MUST be a comma-separated list of descriptive keywords and phrases in English.
+---
+**[Master Photography Guidelines: The Core Rules]**
 
-        **[Your Mission]**
+1.  **Camera & Lens:** The final image must look like it was shot on a **Sony Alpha 1 with a 35mm f/1.4 prime lens**. This is non-negotiable.
+2.  **Style:** The artistic style is a blend of **Hyperrealistic Detail and Documentary Photography**. It must feel authentic, raw, and incredibly detailed—not like a staged AI image.
+3.  **Lighting:** Use **only natural light**. You must prioritize the soft, warm, golden hour light (early morning or late afternoon).
+4.  **Composition:** Strictly apply the **Rule of Thirds**. The main subject must be off-center.
+5.  **Final Prompt Format:** The output MUST be a single line of comma-separated English keywords and phrases. Do not add any explanation.
 
-        Analyze the core essence of the blog post below and generate the DALL-E prompt that will create the perfect cover image, following all the master guidelines above.
+---
+**[Deep Knowledge Base: Southeast Asian Floating Markets]**
 
-        **[Blog Content to Analyze]**
-        ---
-        {article_content[:1000]}
-        ---
-        """
+To achieve world-class quality, you must infuse your prompt with the deep knowledge from this section. This is your art direction guide.
+
+* **Core Essence:** Capture vibrant chaos, energy, cultural immersion, and the intimate connection between people and the river.
+* **Key Visuals:** Colorful boats overflowing with tropical fruits (mangoes, dragon fruits, rambutans), bustling vendors and shoppers, shimmering reflections on the water, stilt houses, and lush vegetation.
+* **Emotional Tone:** The image must evoke excitement, discovery, and the warmth of local hospitality.
+* **Texture & Detail:** Emphasize hyper-realistic textures of woven baskets, wood carvings, fresh produce, and rich fabrics.
+* **Color Palette:** Use a vibrant, saturated palette (rich reds, oranges, yellows, greens) with cinematic LUTs that emphasize tropical warmth without being unnatural.
+
+---
+**[Your Mission]**
+
+1.  **Analyze the Core Essence:** Read the provided [Blog Content to Analyze] below.
+2.  **Synthesize & Create:** Combine the essence of the blog post with your [Deep Knowledge Base] on floating markets.
+3.  **Generate the Prompt:** Create the final DALL-E prompt, ensuring it strictly adheres to all five [Master Photography Guidelines].
+
+**[Blog Content to Analyze]**
+---
+{article_content[:1000]}
+---
+"""
         
         summary_response = client.chat.completions.create(
             model="gpt-4-turbo",
