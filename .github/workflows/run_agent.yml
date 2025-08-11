@@ -18,13 +18,15 @@ jobs:
     # 환경 변수를 작업 전체에 적용하여 안정성을 높입니다.
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 스크립트가 사용할 강력한 토큰을 BLOG_PAT 시크릿에서 가져옵니다.
+      GITHUB_TOKEN: ${{ secrets.BLOG_PAT }}
       GITHUB_REPO_NAME: 'manulkkase/theunfilteredtrail'
       
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          # 체크아웃 및 자동 커밋에는 기본 제공 토큰을 사용합니다.
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
