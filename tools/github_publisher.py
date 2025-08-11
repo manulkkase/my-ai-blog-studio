@@ -2,19 +2,14 @@ import os
 import re
 from datetime import datetime
 from github import Github, GithubException
-from dotenv import load_dotenv
 
-# .env 파일에서 환경 변수 로드
-load_dotenv()
+from github import Github, GithubException
 
-def publish_to_github(title: str, full_article_content: str, category: str, image_local_path: str = None) -> str:
+def publish_to_github(title: str, full_article_content: str, category: str, image_local_path: str = None, github_token: str = None, repo_name: str = None) -> str:
     """
     Publishes the final article according to the new, simplified format.
     It extracts tags from the end of the content and handles optional images.
     """
-    github_token = os.getenv("GITHUB_TOKEN")
-    repo_name = os.getenv("GITHUB_REPO_NAME")
-
     if not all([github_token, repo_name]):
         return "Error: GITHUB_TOKEN or GITHUB_REPO_NAME is not set."
     if "Error:" in full_article_content:
@@ -86,11 +81,11 @@ def publish_to_github(title: str, full_article_content: str, category: str, imag
         frontmatter = "\n".join(frontmatter_parts)
 
         # Combine for the final markdown file
-        full_markdown_content = f"{frontmatter}
+        full_markdown_content = f"""{frontmatter}
 
 {subtitle_and_body}
 
-{tag_line}"
+{tag_line}"""
 
         time_for_filename = now.strftime("%Y-%m-%d-%H%M%S")
         post_filename_base = re.sub(r'[^a-z0-9\s-]', '', title.lower()).strip().replace(' ', '-')
