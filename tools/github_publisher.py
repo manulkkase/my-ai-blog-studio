@@ -81,11 +81,11 @@ def publish_to_github(title: str, full_article_content: str, category: str, imag
         frontmatter = "\n".join(frontmatter_parts)
 
         # Combine for the final markdown file
-        full_markdown_content = f"{frontmatter}
+        full_markdown_content = f"""{frontmatter}
 
 {subtitle_and_body}
 
-{tag_line}"
+{tag_line}"""
 
         time_for_filename = now.strftime("%Y-%m-%d-%H%M%S")
         post_filename_base = re.sub(r'[^a-z0-9\s-]', '', title.lower()).strip().replace(' ', '-')
