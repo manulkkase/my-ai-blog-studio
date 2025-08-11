@@ -6,14 +6,16 @@ from typing import Tuple, List
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain_community.tools import tool
+from langchain.tools import tool
 
+# --- Tool Imports ---
+# Ensure the tools directory is in the Python path
+sys.path.append(os.path.dirname(__file__))
 from tools.topic_fetcher import fetch_topic
 from tools.article_generator import generate_article
 from tools.category_assigner import assign_category
 from tools.image_creator import create_image
 from tools.github_publisher import publish_to_github
-from tools.utils import config
 
 # --- Keyword Parsing ---
 def parse_keywords(topic_line: str) -> Tuple[str, List[str]]:
@@ -27,81 +29,68 @@ def parse_keywords(topic_line: str) -> Tuple[str, List[str]]:
         secondary_keywords: List[str] = []
     return primary_keyword, secondary_keywords
 
-# --- Tool Definitions ---
-
+# --- Tool Definition ---
 @tool
-def full_blog_creation_pipeline_tool(topic_line: str) -> str:
+def full_blog_creation_pipeline(topic_line: str, openai_api_key: str, github_token: str, github_repo_name: str) -> str:
     """
     Handles the entire blog post creation process from a single topic line.
-    This tool fetches the topic, generates the article, assigns a category,
-    creates an image, and publishes the final post.
-    This is the only tool that should be called directly by the agent.
+    Requires API keys and the target repository name to be passed as arguments.
     """
-    # 1. Parse Keywords
     primary_keyword, secondary_keywords = parse_keywords(topic_line)
     if not primary_keyword:
-        return "Error: Could not parse the primary keyword from the topic line."
+        return "Error: Could not parse the primary keyword."
 
-    # 2. Generate Article
     print(f"Generating article for: {primary_keyword}")
-    full_article_content = generate_article(primary_keyword, secondary_keywords)
-    if "Error:" in full_article_content:
-        return full_article_content
+    article_content = generate_article(primary_keyword, secondary_keywords, api_key=openai_api_key)
+    if "Error:" in article_content:
+        return article_content
 
-    # 3. Assign Category
     print(f"Assigning category for: {primary_keyword}")
-    category = assign_category(primary_keyword)
+    category = assign_category(primary_keyword, api_key=openai_api_key)
     if "Error:" in category:
         return category
 
-    # 4. Create Image
     print(f"Creating image for: {primary_keyword}")
-    # Extract body for better image prompt generation
-    body_content = "\n".join(full_article_content.split('\n')[2:])
-    image_local_path = create_image(body_content, primary_keyword)
-    if "Error:" in image_local_path:
-        return image_local_path
+    body_content = "\n".join(article_content.split('\n')[2:])
+    image_path = create_image(body_content, primary_keyword, api_key=openai_api_key)
+    if "Error:" in image_path:
+        return image_path
 
-    # 5. Publish to GitHub
     print(f"Publishing post for: {primary_keyword}")
-    # Extract title from the first line of the article
-    title = full_article_content.split('\n')[0].strip()
-    result = publish_to_github(title, full_article_content, category, image_local_path)
-    
+    title = article_content.split('\n')[0].strip()
+    result = publish_to_github(
+        title=title,
+        full_article_content=article_content,
+        category=category,
+        image_local_path=image_path,
+        github_token=github_token,
+        repo_name=github_repo_name
+    )
     return result
 
 # --- Agent Setup ---
-
-from tools.utils import config
-
-from tools.utils import config
-
 def main():
-    """
-    Main function to initialize and run the Blog Studio Agent.
-    """
-    if not all([config.openai_api_key, config.github_token, config.github_repo_name]):
-        print("Error: Required environment variables are not set. Check your GitHub Actions secrets.")
+    """Main function to initialize and run the Blog Studio Agent."""
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    github_token = os.getenv("GITHUB_TOKEN")
+    github_repo_name = os.getenv("GITHUB_REPO_NAME")
+
+    if not all([openai_api_key, github_token, github_repo_name]):
+        print("Error: Required environment variables are not set.")
         sys.exit(1)
 
-    tools = [full_blog_creation_pipeline_tool]
-
-    agent_system_prompt = """
-    You are 'Blog Studio Agent', a supervisor AI. Your only job is to take a topic line and pass it to the `full_blog_creation_pipeline_tool` to handle the entire process.
-    First, fetch the topic line from the user input. Then, call the tool with the fetched topic line.
-    """
-
+    tools = [full_blog_creation_pipeline]
+    
     prompt = ChatPromptTemplate.from_messages([
-        ("system", agent_system_prompt),
-        ("user", "Please process the following topic line: {input}"),
+        ("system", "You are a supervisor AI. Your only job is to call the `full_blog_creation_pipeline` tool with the provided `topic_line` and all the required API keys and repository information."),
+        ("user", "{topic_line}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
-
-    llm = ChatOpenAI(model="gpt-4-turbo", temperature=0, api_key=config.openai_api_key)
+    
+    llm = ChatOpenAI(model="gpt-4-turbo", temperature=0, api_key=openai_api_key)
     agent = create_openai_tools_agent(llm, tools, prompt)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-    # Fetch the topic directly here instead of inside the agent loop
     topic_line = fetch_topic()
     if not topic_line or "처리할 주제가 없습니다" in topic_line:
         print("No topics to process. Exiting.")
@@ -111,12 +100,16 @@ def main():
     print(f"Topic: {topic_line}")
     print("----------------------------------------------------")
 
-    response = agent_executor.invoke({"input": topic_line})
+    response = agent_executor.invoke({
+        "topic_line": topic_line,
+        "openai_api_key": openai_api_key,
+        "github_token": github_token,
+        "github_repo_name": github_repo_name,
+    })
 
     print("--- Agent execution finished ---")
     print(f"Final Output: {response['output']}")
     print("--------------------------------")
-
 
 if __name__ == "__main__":
     main()
