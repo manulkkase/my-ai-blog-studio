@@ -1,8 +1,6 @@
-import os
-from typing import List
-from openai import OpenAI, APIError
+from .utils import config
 
-def generate_article(primary_keyword: str, secondary_keywords: List[str]) -> str:
+def generate_article(primary_keyword: str, secondary_keywords: list[str]) -> str:
     """
     Generates a high-quality, SEO-optimized blog post in English based on primary and secondary keywords.
     """
@@ -10,7 +8,7 @@ def generate_article(primary_keyword: str, secondary_keywords: List[str]) -> str
         return "Error: Primary keyword was not provided."
 
     try:
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        client = OpenAI(api_key=config.openai_api_key)
 
         system_prompt = f"""
 You are 'The Homeland Insider,' a blog writer with a uniquely personal and authoritative voice. Your identity is central to your writing: you are from Seoul, your partner is from Saigon, and you now raise your family in Australia. Your blog's mission is to be the honest, insider guide that bridges these two cultures for curious travelers.

@@ -74,24 +74,14 @@ def full_blog_creation_pipeline_tool(topic_line: str) -> str:
 
 # --- Agent Setup ---
 
+from tools.utils import config
+
 def main():
     """
     Main function to initialize and run the Blog Studio Agent.
     """
-    # Debug environment variables
-    print("=== Environment Variables Debug ===")
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    github_token = os.getenv("GITHUB_TOKEN")
-    github_repo_name = os.getenv("GITHUB_REPO_NAME")
-    
-    print(f"OPENAI_API_KEY: {'SET' if openai_api_key else 'NOT SET'}")
-    print(f"GITHUB_TOKEN: {'SET' if github_token else 'NOT SET'}")
-    print(f"GITHUB_REPO_NAME: {github_repo_name or 'NOT SET'}")
-    print("=====================================")
-
-    if not openai_api_key or not github_token or not github_repo_name:
-        print("Error: Required environment variables are not set.")
-        print("Please check your GitHub Actions secrets configuration.")
+    if not all([config.openai_api_key, config.github_token, config.github_repo_name]):
+        print("Error: Required environment variables are not set. Check your GitHub Actions secrets.")
         sys.exit(1)
 
     # The agent now only needs one tool that encapsulates the entire workflow.
@@ -108,7 +98,7 @@ def main():
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
-    llm = ChatOpenAI(model="gpt-4-turbo", temperature=0)
+    llm = ChatOpenAI(model="gpt-4-turbo", temperature=0, api_key=config.openai_api_key)
     agent = create_openai_tools_agent(llm, tools, prompt)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
