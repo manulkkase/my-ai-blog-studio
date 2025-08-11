@@ -19,7 +19,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # 자동 커밋에는 기본 제공 토큰을 사용합니다.
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
@@ -32,24 +31,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Debug Environment Variables
+      - name: Run Blog Studio Agent
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.BLOG_PAT }}
-          GITHUB_REPO_NAME: 'manulkkase/theunfilteredtrail'
-        run: |
-          echo "--- Shell sees these variables ---"
-          echo "GITHUB_REPO_NAME is: $GITHUB_REPO_NAME"
-          echo "GITHUB_TOKEN is set: ${GITHUB_TOKEN:+true}"
-          echo "--- Python sees these variables ---"
-          python -c "import os; print(f\"Python sees GITHUB_REPO_NAME as: {os.getenv('GITHUB_REPO_NAME')}\"); print(f\"Python sees GITHUB_TOKEN as set: {os.getenv('GITHUB_TOKEN') is not None}\")"
-
-      - name: Run Blog Studio Agent
-        run: |
-          export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
-          export GITHUB_TOKEN="${{ secrets.BLOG_PAT }}"  
-          export GITHUB_REPO_NAME="manulkkase/theunfilteredtrail"
-          python agent_studio.py
+          GITHUB_REPO_NAME: 'manul-kase/theunfilteredtrail'
+        run: python agent_studio.py
 
       - name: Commit and push changes
         run: |
