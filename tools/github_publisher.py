@@ -21,15 +21,22 @@ def publish_to_github(title: str, full_article_content: str, category: str, imag
         return "Error: Invalid article content provided. Please check the generation step."
 
     # --- Start of Content & Tag Extraction ---
-    content_parts = full_article_content.split("🏷️")
-    main_content = content_parts[0].strip()
+    lines = full_article_content.strip().split('\n')
     
-    # The first line is the title, second is subtitle. The rest is the body.
-    lines = main_content.split('\n')
-    # title is already passed as an argument, but we need to separate the body
-    subtitle_and_body = "\n".join(lines[1:]).strip()
+    # Find the last line that starts with #, which is the tag line
+    tag_line = ""
+    for i in range(len(lines) - 1, -1, -1):
+        if lines[i].strip().startswith("#"):
+            tag_line = lines[i].strip()
+            # The content is everything before the tag line
+            main_content = "\n".join(lines[:i]).strip()
+            break
+    else: # If no tag line is found
+        main_content = full_article_content.strip()
 
-    tags = "🏷️" + "🏷️".join(content_parts[1:]) if len(content_parts) > 1 else ""
+    # The first line of the main content is the title, second is subtitle. The rest is the body.
+    content_lines = main_content.split('\n')
+    subtitle_and_body = "\n".join(content_lines[1:]).strip()
     # --- End of Content & Tag Extraction ---
 
     # --- Start of Image Handling ---
@@ -79,7 +86,11 @@ def publish_to_github(title: str, full_article_content: str, category: str, imag
         frontmatter = "\n".join(frontmatter_parts)
 
         # Combine for the final markdown file
-        full_markdown_content = f"{frontmatter}\n\n{subtitle_and_body}\n\n{tags}"
+        full_markdown_content = f"{frontmatter}
+
+{subtitle_and_body}
+
+{tag_line}"
 
         time_for_filename = now.strftime("%Y-%m-%d-%H%M%S")
         post_filename_base = re.sub(r'[^a-z0-9\s-]', '', title.lower()).strip().replace(' ', '-')

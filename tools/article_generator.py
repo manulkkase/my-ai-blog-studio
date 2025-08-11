@@ -45,7 +45,7 @@ Your tone is warm, confident, and deeply trustworthy—like a knowledgeable frie
 
 ### Required Output ###
 
-*   **Tags**: At the very end of the post, provide a list of relevant keywords as tags, prefixed with the ️ emoji.
+*   **Tags**: At the very end of the post, provide a single line of relevant keywords as hashtags (e.g., "#Keyword1 #Keyword2 #Keyword3").
 """
 
         user_prompt = f"Primary Keyword: {primary_keyword}\nSecondary Keywords: {', '.join(secondary_keywords)}"
