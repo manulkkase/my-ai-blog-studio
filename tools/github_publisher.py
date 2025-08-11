@@ -2,9 +2,6 @@ import os
 import re
 from datetime import datetime
 from github import Github, GithubException
-from dotenv import load_dotenv
-
-# Environment variables are now managed by the GitHub Actions workflow
 
 def publish_to_github(title: str, full_article_content: str, category: str, image_local_path: str = None) -> str:
     """

@@ -1,8 +1,5 @@
 import os
 from openai import OpenAI, APIError
-from dotenv import load_dotenv
-
-# Environment variables are now managed by the GitHub Actions workflow
 
 def assign_category(topic: str) -> str:
     """
