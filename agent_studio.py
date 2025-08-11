@@ -7,9 +7,6 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.tools import tool
 
-# Environment variables are now managed by the GitHub Actions workflow
-# No need to load .env file
-
 # --- Tool Imports ---
 sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
 
@@ -34,12 +31,10 @@ def parse_keywords(topic_line: str) -> (str, list[str]):
 # --- Tool Definitions ---
 
 @tool
-def full_blog_creation_pipeline_tool(topic_line: str) -> str:
+def full_blog_creation_pipeline_tool(topic_line: str, openai_api_key: str, github_token: str, github_repo_name: str) -> str:
     """
     Handles the entire blog post creation process from a single topic line.
-    This tool fetches the topic, generates the article, assigns a category,
-    creates an image, and publishes the final post.
-    This is the only tool that should be called directly by the agent.
+    This tool now requires API keys and repo name to be passed explicitly.
     """
     # 1. Parse Keywords
     primary_keyword, secondary_keywords = parse_keywords(topic_line)
@@ -48,29 +43,27 @@ def full_blog_creation_pipeline_tool(topic_line: str) -> str:
 
     # 2. Generate Article
     print(f"Generating article for: {primary_keyword}")
-    full_article_content = generate_article(primary_keyword, secondary_keywords)
+    full_article_content = generate_article(primary_keyword, secondary_keywords, api_key=openai_api_key)
     if "Error:" in full_article_content:
         return full_article_content
 
     # 3. Assign Category
     print(f"Assigning category for: {primary_keyword}")
-    category = assign_category(primary_keyword)
+    category = assign_category(primary_keyword, api_key=openai_api_key)
     if "Error:" in category:
         return category
 
     # 4. Create Image
     print(f"Creating image for: {primary_keyword}")
-    # Extract body for better image prompt generation
     body_content = "\n".join(full_article_content.split('\n')[2:])
-    image_local_path = create_image(body_content, primary_keyword)
+    image_local_path = create_image(body_content, primary_keyword, api_key=openai_api_key)
     if "Error:" in image_local_path:
         return image_local_path
 
     # 5. Publish to GitHub
     print(f"Publishing post for: {primary_keyword}")
-    # Extract title from the first line of the article
     title = full_article_content.split('\n')[0].strip()
-    result = publish_to_github(title, full_article_content, category, image_local_path)
+    result = publish_to_github(title, full_article_content, category, image_local_path, token=github_token, repo_name=github_repo_name)
     
     return result
 
@@ -80,29 +73,31 @@ def main():
     """
     Main function to initialize and run the Blog Studio Agent.
     """
-    if not os.getenv("OPENAI_API_KEY") or not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO_NAME"):
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    github_token = os.getenv("GITHUB_TOKEN")
+    github_repo_name = os.getenv("GITHUB_REPO_NAME")
+
+    if not all([openai_api_key, github_token, github_repo_name]):
         print("Error: Required environment variables are not set.")
+        print(f"OPENAI_API_KEY is set: {openai_api_key is not None}")
+        print(f"GITHUB_TOKEN is set: {github_token is not None}")
+        print(f"GITHUB_REPO_NAME is set: {github_repo_name is not None}")
         sys.exit(1)
 
-    # The agent now only needs one tool that encapsulates the entire workflow.
     tools = [full_blog_creation_pipeline_tool]
 
-    agent_system_prompt = """
-    You are 'Blog Studio Agent', a supervisor AI. Your only job is to take a topic line and pass it to the `full_blog_creation_pipeline_tool` to handle the entire process.
-    First, fetch the topic line from the user input. Then, call the tool with the fetched topic line.
-    """
+    agent_system_prompt = "You are a supervisor AI. Your only job is to take a topic line and pass it to the `full_blog_creation_pipeline_tool`."
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", agent_system_prompt),
-        ("user", "Please process the following topic line: {input}"),
+        ("user", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ])
 
-    llm = ChatOpenAI(model="gpt-4-turbo", temperature=0)
+    llm = ChatOpenAI(model="gpt-4-turbo", temperature=0, api_key=openai_api_key)
     agent = create_openai_tools_agent(llm, tools, prompt)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-    # Fetch the topic directly here instead of inside the agent loop
     topic_line = fetch_topic()
     if not topic_line or "처리할 주제가 없습니다" in topic_line:
         print("No topics to process. Exiting.")
@@ -112,7 +107,13 @@ def main():
     print(f"Topic: {topic_line}")
     print("----------------------------------------------------")
 
-    response = agent_executor.invoke({"input": topic_line})
+    # Pass the environment variables explicitly to the tool
+    response = agent_executor.invoke({
+        "input": topic_line,
+        "openai_api_key": openai_api_key,
+        "github_token": github_token,
+        "github_repo_name": github_repo_name
+    })
 
     print("--- Agent execution finished ---")
     print(f"Final Output: {response['output']}")
