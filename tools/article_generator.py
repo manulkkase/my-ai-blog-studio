@@ -3,8 +3,7 @@ from openai import OpenAI, APIError
 from dotenv import load_dotenv
 import re
 
-# .env 파일에서 환경 변수 로드
-# load_dotenv() - This is now handled by the main agent_studio.py
+# Environment variables are now managed by the GitHub Actions workflow
 
 def generate_article(primary_keyword: str, secondary_keywords: list[str]) -> str:
     """

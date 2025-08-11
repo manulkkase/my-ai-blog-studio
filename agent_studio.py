@@ -1,6 +1,5 @@
 import os
 import sys
-from dotenv import load_dotenv
 import re
 
 from langchain_openai import ChatOpenAI
@@ -8,9 +7,8 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.tools import tool
 
-# Load environment variables from .env file only if it exists
-if os.path.exists('.env'):
-    load_dotenv()
+# Environment variables are now managed by the GitHub Actions workflow
+# No need to load .env file
 
 # --- Tool Imports ---
 sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))

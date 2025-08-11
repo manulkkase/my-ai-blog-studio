@@ -2,8 +2,7 @@ import os
 from openai import OpenAI, APIError
 from dotenv import load_dotenv
 
-# .env 파일에서 환경 변수 로드
-# load_dotenv() - This is now handled by the main agent_studio.py
+# Environment variables are now managed by the GitHub Actions workflow
 
 def assign_category(topic: str) -> str:
     """

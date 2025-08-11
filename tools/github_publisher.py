@@ -4,8 +4,7 @@ from datetime import datetime
 from github import Github, GithubException
 from dotenv import load_dotenv
 
-# .env 파일에서 환경 변수 로드
-# load_dotenv() - This is now handled by the main agent_studio.py
+# Environment variables are now managed by the GitHub Actions workflow
 
 def publish_to_github(title: str, full_article_content: str, category: str, image_local_path: str = None) -> str:
     """
