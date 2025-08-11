@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import re
 
 # .env 파일에서 환경 변수 로드
-load_dotenv()
+# load_dotenv() - This is now handled by the main agent_studio.py
 
 def generate_article(primary_keyword: str, secondary_keywords: list[str]) -> str:
     """
