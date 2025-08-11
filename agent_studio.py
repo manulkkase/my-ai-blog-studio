@@ -8,8 +8,9 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.tools import tool
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file only if it exists
+if os.path.exists('.env'):
+    load_dotenv()
 
 # --- Tool Imports ---
 sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
