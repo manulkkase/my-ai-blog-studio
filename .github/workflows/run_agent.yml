@@ -35,7 +35,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.BLOG_PAT }}
-          GITHUB_REPO_NAME: 'manul-kase/theunfilteredtrail'
+          GITHUB_REPO_NAME: 'manulkkase/theunfilteredtrail'
         run: python agent_studio.py
 
       - name: Commit and push changes
