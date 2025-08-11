@@ -2,33 +2,26 @@
 name: 'Run Blog Studio Agent'
 
 on:
-  # 매일 오전 9시 (UTC 기준 0시)에 자동으로 실행
   schedule:
-    - cron: '0 0 * * *'
+    # 시드니 아침 7시 (UTC 기준 전날 21시)에 매일 실행
+    - cron: '0 21 * * *'
   
-  # topics.txt 파일에 변경사항이 push되었을 때 실행
-  push:
-    branches:
-      - main
-      - master
-    paths:
-      - 'topics.txt'
-      
-  # GitHub Actions 탭에서 수동으로 실행 가능
   workflow_dispatch:
-    inputs:
-      prompt:
-        description: 'Agent에게 전달할 프롬프트'
-        required: true
-        default: "topics.txt에서 주제를 하나 가져와서, 전체 발행 프로세스를 완료해줘."
 
 jobs:
   run-agent-job:
     runs-on: ubuntu-latest
     
+    # 워크플로우가 저장소에 푸시할 수 있도록 권한을 부여합니다.
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # 자동 커밋을 위한 토큰 설정
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -44,7 +37,16 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO_NAME: ${{ github.repository }} # GITHUB_REPO_NAME을 현재 리포지토리로 자동 설정
+          # 글을 발행할 목표 저장소를 명확하게 지정합니다.
+          GITHUB_REPO_NAME: 'manulkkase/theunfilteredtrail'
         run: |
-          python agent_studio.py "${{ github.event.inputs.prompt || 'topics.txt에서 주제를 하나 가져와서, 전체 발행 프로세스를 완료해줘.' }}"
+          python agent_studio.py
 
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add topics.txt
+          # 변경 사항이 있을 때만 커밋합니다.
+          git diff --quiet && git diff --staged --quiet || git commit -m "docs: Update topics list after agent run"
+          git push
