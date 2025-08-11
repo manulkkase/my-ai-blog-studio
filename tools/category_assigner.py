@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI, APIError
 
-def assign_category(topic: str, api_key: str) -> str:
+def assign_category(topic: str) -> str:
     """
     주어진 주제(topic)를 분석하여, 정의된 6개의 카테고리 중 가장 적합한 카테고리 하나를 결정합니다.
     article_generator_tool이 글을 생성한 후에 사용되어야 합니다.
@@ -20,7 +20,7 @@ def assign_category(topic: str, api_key: str) -> str:
     ]
 
     try:
-        client = OpenAI(api_key=api_key)
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
         system_prompt = f"""
         당신은 블로그 콘텐츠를 정확하게 분류하는 카테고리 전문가입니다.

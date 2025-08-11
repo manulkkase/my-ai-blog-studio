@@ -3,13 +3,13 @@ import re
 from datetime import datetime
 from github import Github, GithubException
 
-def publish_to_github(title: str, full_article_content: str, category: str, image_local_path: str = None, token: str = None, repo_name: str = None) -> str:
+def publish_to_github(title: str, full_article_content: str, category: str, image_local_path: str = None) -> str:
     """
     Publishes the final article according to the new, simplified format.
     It extracts tags from the end of the content and handles optional images.
     """
-    github_token = token or os.getenv("GITHUB_TOKEN")
-    repo_name = repo_name or os.getenv("GITHUB_REPO_NAME")
+    github_token = os.getenv("GITHUB_TOKEN")
+    repo_name = os.getenv("GITHUB_REPO_NAME")
 
     if not all([github_token, repo_name]):
         return "Error: GITHUB_TOKEN or GITHUB_REPO_NAME is not set."
