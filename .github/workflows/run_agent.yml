@@ -39,6 +39,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Debug Environment Variables
+        run: |
+          echo "--- Printing Environment Variables ---"
+          echo "GITHUB_REPO_NAME: ${{ env.GITHUB_REPO_NAME }}"
+          echo "OPENAI_API_KEY is set: ${{ env.OPENAI_API_KEY != '' }}"
+          echo "GITHUB_TOKEN is set: ${{ env.GITHUB_TOKEN != '' }}"
+          echo "--- End of Environment Variables ---"
+
       - name: Run Blog Studio Agent
         run: python agent_studio.py
 
