@@ -14,9 +14,5 @@ class Config:
             print(f"OPENAI_API_KEY: {'SET' if self.openai_api_key else 'NOT SET'}")
             print(f"GITHUB_TOKEN: {'SET' if self.github_token else 'NOT SET'}")
             print(f"GITHUB_REPO_NAME: {self.github_repo_name or 'NOT SET'}")
-            # In a real-world scenario, you might want to raise an exception here.
-            # For the workflow, we'll let the individual tools handle the error message.
 
-# Create a single, global instance of the Config class.
-# Other modules will import this instance.
 config = Config()

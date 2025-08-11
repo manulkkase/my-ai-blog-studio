@@ -22,6 +22,27 @@ def assign_category(topic: str) -> str:
     ]
 
     try:
+        from .utils import config
+
+def assign_category(topic: str) -> str:
+    """
+    주어진 주제(topic)를 분석하여, 정의된 6개의 카테고리 중 가장 적합한 카테고리 하나를 결정합니다.
+    article_generator_tool이 글을 생성한 후에 사용되어야 합니다.
+    """
+    if not topic or "오류:" in topic:
+        return "분류할 유효한 주제가 없습니다."
+
+    # 블로그의 6개 카테고리 목록
+    categories = [
+        "K-Culture & Palaces",
+        "Street Food & Night Markets",
+        "Mountains & Rice Terraces",
+        "Beaches, Bays & Islands",
+        "City Vibes & Night-life",
+        "Budget Hacks & Transport"
+    ]
+
+    try:
         client = OpenAI(api_key=config.openai_api_key)
 
         system_prompt = f"""

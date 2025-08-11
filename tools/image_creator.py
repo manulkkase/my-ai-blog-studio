@@ -16,6 +16,18 @@ def create_image(article_content: str, topic: str) -> str:
         return "이미지를 생성하기 위한 유효한 글 내용이 없습니다. 이전 단계를 확인해주세요."
 
     try:
+        from .utils import config
+
+def create_image(article_content: str, topic: str) -> str:
+    """
+    생성된 글의 내용과 주제를 바탕으로 DALL-E 3를 사용하여 어울리는 이미지를 생성하고,
+    'static/images/' 경로에 저장합니다.
+    article_generator_tool이 성공적으로 글을 생성한 후에 사용되어야 합니다.
+    """
+    if "오류:" in article_content or not article_content:
+        return "이미지를 생성하기 위한 유효한 글 내용이 없습니다. 이전 단계를 확인해주세요."
+
+    try:
         client = OpenAI(api_key=config.openai_api_key)
 
         # 이미지 생성 프롬프트를 위한 요약 생성 (LLM 호출)

@@ -76,6 +76,8 @@ def full_blog_creation_pipeline_tool(topic_line: str) -> str:
 
 from tools.utils import config
 
+from tools.utils import config
+
 def main():
     """
     Main function to initialize and run the Blog Studio Agent.
@@ -84,7 +86,6 @@ def main():
         print("Error: Required environment variables are not set. Check your GitHub Actions secrets.")
         sys.exit(1)
 
-    # The agent now only needs one tool that encapsulates the entire workflow.
     tools = [full_blog_creation_pipeline_tool]
 
     agent_system_prompt = """

@@ -1,6 +1,8 @@
 from .utils import config
 
-def generate_article(primary_keyword: str, secondary_keywords: list[str]) -> str:
+from .utils import config
+
+def generate_article(primary_keyword: str, secondary_keywords: List[str]) -> str:
     """
     Generates a high-quality, SEO-optimized blog post in English based on primary and secondary keywords.
     """
