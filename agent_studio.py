@@ -8,14 +8,12 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.tools import tool
 
-# --- Tool Imports ---
-sys.path.append(os.path.join(os.path.dirname(__file__), 'tools'))
-
-from topic_fetcher import fetch_topic
-from article_generator import generate_article
-from category_assigner import assign_category
-from image_creator import create_image
-from github_publisher import publish_to_github
+from tools.topic_fetcher import fetch_topic
+from tools.article_generator import generate_article
+from tools.category_assigner import assign_category
+from tools.image_creator import create_image
+from tools.github_publisher import publish_to_github
+from tools.utils import config
 
 # --- Keyword Parsing ---
 def parse_keywords(topic_line: str) -> Tuple[str, List[str]]:

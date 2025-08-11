@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from github import Github, GithubException
 
-from .utils import config
+from tools.utils import config
 
 def publish_to_github(title: str, full_article_content: str, category: str, image_local_path: str = None) -> str:
     """

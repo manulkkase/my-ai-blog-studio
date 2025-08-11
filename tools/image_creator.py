@@ -4,7 +4,7 @@ import requests
 from datetime import datetime
 from openai import OpenAI, APIError
 
-from .utils import config
+from tools.utils import config
 
 def create_image(article_content: str, topic: str) -> str:
     """

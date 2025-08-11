@@ -1,6 +1,4 @@
-from .utils import config
-
-from .utils import config
+from tools.utils import config
 
 def generate_article(primary_keyword: str, secondary_keywords: List[str]) -> str:
     """

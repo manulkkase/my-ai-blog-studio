@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI, APIError
 
-from .utils import config
+from tools.utils import config
 
 def assign_category(topic: str) -> str:
     """
