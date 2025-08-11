@@ -1,11 +1,8 @@
 import os
+from typing import List
 from openai import OpenAI, APIError
-from dotenv import load_dotenv
-import re
 
-# Environment variables are now managed by the GitHub Actions workflow
-
-def generate_article(primary_keyword: str, secondary_keywords: list[str]) -> str:
+def generate_article(primary_keyword: str, secondary_keywords: List[str]) -> str:
     """
     Generates a high-quality, SEO-optimized blog post in English based on primary and secondary keywords.
     """

@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+from typing import Tuple, List
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -17,15 +18,15 @@ from image_creator import create_image
 from github_publisher import publish_to_github
 
 # --- Keyword Parsing ---
-def parse_keywords(topic_line: str) -> (str, list[str]):
+def parse_keywords(topic_line: str) -> Tuple[str, List[str]]:
     """Helper function to parse keywords from a string."""
     primary_match = re.search(r"Primary:\s*(.*?)(;|$)", topic_line)
     secondary_match = re.search(r"Secondary:\s*(.*)", topic_line)
     primary_keyword = primary_match.group(1).strip() if primary_match else ""
     if secondary_match and secondary_match.group(1):
-        secondary_keywords = [kw.strip() for kw in secondary_match.group(1).split(',')]
+        secondary_keywords: List[str] = [kw.strip() for kw in secondary_match.group(1).split(',')]
     else:
-        secondary_keywords = []
+        secondary_keywords: List[str] = []
     return primary_keyword, secondary_keywords
 
 # --- Tool Definitions ---
