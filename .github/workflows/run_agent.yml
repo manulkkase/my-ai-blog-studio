@@ -15,18 +15,11 @@ jobs:
     permissions:
       contents: write
       
-    # 환경 변수를 작업 전체에 적용하여 안정성을 높입니다.
-    env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      # 스크립트가 사용할 강력한 토큰을 BLOG_PAT 시크릿에서 가져옵니다.
-      GITHUB_TOKEN: ${{ secrets.BLOG_PAT }}
-      GITHUB_REPO_NAME: 'manulkkase/theunfilteredtrail'
-      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # 체크아웃 및 자동 커밋에는 기본 제공 토큰을 사용합니다.
+          # 자동 커밋에는 기본 제공 토큰을 사용합니다.
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
@@ -39,15 +32,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Debug Environment Variables
-        run: |
-          echo "--- Printing Environment Variables ---"
-          echo "GITHUB_REPO_NAME: ${{ env.GITHUB_REPO_NAME }}"
-          echo "OPENAI_API_KEY is set: ${{ env.OPENAI_API_KEY != '' }}"
-          echo "GITHUB_TOKEN is set: ${{ env.GITHUB_TOKEN != '' }}"
-          echo "--- End of Environment Variables ---"
-
       - name: Run Blog Studio Agent
+        # 환경 변수를 실행 명령어에 직접 주입하여 전달 문제를 해결합니다.
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.BLOG_PAT }}
+          GITHUB_REPO_NAME: 'manulkkase/theunfilteredtrail'
         run: python agent_studio.py
 
       - name: Commit and push changes
