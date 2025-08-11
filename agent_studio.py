@@ -77,12 +77,20 @@ def main():
     """
     Main function to initialize and run the Blog Studio Agent.
     """
+    # Debug environment variables
+    print("=== Environment Variables Debug ===")
     openai_api_key = os.getenv("OPENAI_API_KEY")
     github_token = os.getenv("GITHUB_TOKEN")
     github_repo_name = os.getenv("GITHUB_REPO_NAME")
+    
+    print(f"OPENAI_API_KEY: {'SET' if openai_api_key else 'NOT SET'}")
+    print(f"GITHUB_TOKEN: {'SET' if github_token else 'NOT SET'}")
+    print(f"GITHUB_REPO_NAME: {github_repo_name or 'NOT SET'}")
+    print("=====================================")
 
-    if not os.getenv("OPENAI_API_KEY") or not os.getenv("GITHUB_TOKEN") or not os.getenv("GITHUB_REPO_NAME"):
+    if not openai_api_key or not github_token or not github_repo_name:
         print("Error: Required environment variables are not set.")
+        print("Please check your GitHub Actions secrets configuration.")
         sys.exit(1)
 
     # The agent now only needs one tool that encapsulates the entire workflow.

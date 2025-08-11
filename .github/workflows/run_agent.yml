@@ -45,11 +45,11 @@ jobs:
           python -c "import os; print(f\"Python sees GITHUB_REPO_NAME as: {os.getenv('GITHUB_REPO_NAME')}\"); print(f\"Python sees GITHUB_TOKEN as set: {os.getenv('GITHUB_TOKEN') is not None}\")"
 
       - name: Run Blog Studio Agent
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.BLOG_PAT }}
-          GITHUB_REPO_NAME: 'manulkkase/theunfilteredtrail'
-        run: python agent_studio.py
+        run: |
+          export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          export GITHUB_TOKEN="${{ secrets.BLOG_PAT }}"  
+          export GITHUB_REPO_NAME="manulkkase/theunfilteredtrail"
+          python agent_studio.py
 
       - name: Commit and push changes
         run: |
