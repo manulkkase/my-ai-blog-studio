@@ -22,19 +22,22 @@ def create_image(article_content: str, topic: str) -> str:
 
         # 이미지 생성 프롬프트를 위한 요약 생성 (LLM 호출)
         summary_prompt = f"""
-        너는 내셔널 지오그래픽 소속의 베테랑 여행 사진작가다. 주어진 블로그 글의 핵심을 꿰뚫는 단 한 장의 대표 사진을 만들어야 한다.
+        You are a world-class travel photographer creating a single, stunning cover image for a blog post.
+        You must adhere strictly to the following guidelines to generate a DALL-E prompt (in English) based on the provided blog content.
 
-        **[미션]**
-        다음 블로그 글을 분석하여, 마치 독자가 그 순간을 직접 엿보는 듯한 느낌을 주는 '결정적 순간(The Decisive Moment)'을 포착해줘.
+        **[Master Photography Guidelines]**
 
-        **[촬영 가이드라인]**
-        1.  **스타일:** 꾸며낸 스튜디오 사진이 아닌, 현장의 날것(RAW) 느낌을 살린 포토 저널리즘 스타일.
-        2.  **카메라/렌즈:** 라이카(Leica) M11 카메라와 35mm 단렌즈로 촬영한 듯한 질감.
-        3.  **조명:** 인공조명은 절대 사용 금지. 오직 현장의 자연광(natural light)만을 활용하며, 특히 해 질 녘의 부드러운 빛(golden hour)을 선호.
-        4.  **구성:** 피사체는 완벽하게 중앙에 놓기보다, '3분할 법칙(Rule of Thirds)'에 따라 자연스럽게 배치하여 깊이와 균형감을 더할 것.
-        5.  **결과물:** 최종 프롬프트는 반드시 영어로, 쉼표로 구분된 핵심 묘사들의 나열 형태여야 한다.
+        1.  **Camera & Lens:** The image must look like it was shot on a **Sony Alpha 1** with a **35mm f/1.4 prime lens**.
+        2.  **Style:** The artistic style must be a blend of **Hyperrealistic Detail** and **Documentary Photography**. It should feel authentic, raw, and incredibly detailed, not like a staged or overly-edited AI image.
+        3.  **Lighting:** Use only **natural light**. Prioritize the soft, warm light of the **golden hour** (early morning or late afternoon).
+        4.  **Composition:** Apply the **Rule of Thirds**. The main subject should be placed off-center to create balance and depth.
+        5.  **Final Prompt Format:** The output MUST be a comma-separated list of descriptive keywords and phrases in English.
 
-        **[분석할 블로그 내용]**
+        **[Your Mission]**
+
+        Analyze the core essence of the blog post below and generate the DALL-E prompt that will create the perfect cover image, following all the master guidelines above.
+
+        **[Blog Content to Analyze]**
         ---
         {article_content[:1000]}
         ---
