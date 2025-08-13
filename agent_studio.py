@@ -66,7 +66,7 @@ def main():
     # 3. Create Image
     print(f"Creating image for: {primary_keyword}")
     body_content = "\n".join(article_content.split('\n')[2:])
-    image_path = create_image(body_content, primary_keyword, api_key=openai_api_key)
+    image_path = create_image(body_content, primary_keyword)
     if "Error:" in image_path:
         print(f"Failed to create image: {image_path}")
         sys.exit(1)
