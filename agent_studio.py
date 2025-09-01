@@ -69,7 +69,7 @@ def main():
     image_path = create_image(body_content, primary_keyword)
     if "Error:" in image_path:
         print(f"Failed to create image: {image_path}")
-        sys.exit(1)
+        # sys.exit(1)
 
     # 4. Publish to GitHub
     print(f"Publishing post for: {primary_keyword}")
