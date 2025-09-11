@@ -69,13 +69,15 @@ def publish_to_github(title: str, full_article_content: str, category: str, imag
         now = datetime.now()
         date_for_frontmatter = now.strftime("%Y-%m-%d")
         time_for_filename = now.strftime("%Y-%m-%d-%H%M%S")
+        post_permalink_slug = re.sub(r'[^a-z0-9\s-]', '', title.lower()).strip().replace(' ', '-')
+        if not post_permalink_slug:post_permalink_slug = "new-post"
         
         frontmatter_parts = [
             "---",
             f'title: "{title}"',
             f"date: {date_for_frontmatter}",
             f'category: "{category}"',
-            f'permalink: "/blog/{time_for_filename}/"'
+            f'permalink: "/{post_permalink_slug}/"'
         ]
         if featured_image_path:
             frontmatter_parts.append(f'featured_image: "{featured_image_path}"')
